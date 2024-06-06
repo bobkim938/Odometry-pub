@@ -8,8 +8,29 @@
 
 class odom : public rclcpp::Node {
     public:
-        odom() : Node("pose_odometry")
-        {
+        odom(): Node("odom_node") {
+            // Declare parameters with default values
+            this->declare_parameter<double>("wheel_diameter", 0.0);
+            this->declare_parameter<double>("wheel_to_wheel", 0.0);
+            this->declare_parameter<int>("encoder_resolution", 0);
+            this->declare_parameter<int>("interpolation_rate", 0);
+
+            // Get the parameters
+            this->get_parameter("wheel_diameter", wheel_diameter_);
+            this->get_parameter("wheel_to_wheel", wheel_to_wheel_);
+            this->get_parameter("encoder_resolution", encoder_resolution_);
+            this->get_parameter("interpolation_rate", interpolation_rate_);
+            if(wheel_diameter_ == 0.0 || wheel_to_wheel_ == 0.0 || encoder_resolution_ == 0 || interpolation_rate_ == 0) {
+                RCLCPP_ERROR(this->get_logger(), "Parameters not set properly");
+                return;
+            }
+            else {
+                RCLCPP_INFO(this->get_logger(), "wheel_diameter: '%f'", wheel_diameter_);
+                RCLCPP_INFO(this->get_logger(), "wheel_to_wheel: '%f'", wheel_to_wheel_);
+                RCLCPP_INFO(this->get_logger(), "encoder_resolution: '%d'", encoder_resolution_);
+                RCLCPP_INFO(this->get_logger(), "interpolation_rate: '%d'", interpolation_rate_);
+            }
+
             RCLCPP_INFO(this->get_logger(), "pose_odom node initialized");
             auto qos = rclcpp::QoS(10);  // 10 is the history depth
             qos.reliability(rclcpp::ReliabilityPolicy::BestEffort);
@@ -25,15 +46,15 @@ class odom : public rclcpp::Node {
         nav_msgs::msg::Odometry odom_msg = nav_msgs::msg::Odometry();
 
         // encoder data
+        int interpolation_rate_; // 4 times interpolation rate
+        int encoder_resolution_; // 1024 counts per revolution
+        double wheel_diameter_; // 15 cm
+        double wheel_to_wheel_; // 30 cm
         int encoder_data_left = 0;
         int encoder_data_right = 0;
-        int interpolation_rate = 4; // 4 times interpolation rate
-        int encoder_resolution = 1024; // 1024 counts per revolution
-        double wheel_diameter = 0.15; // 15 cm
         double distance_left = 0.0;
         double distance_right = 0.0;
         double distance_avg = 0.0;
-        double wheel_to_wheel = 0.3; // 30 cm
         double delta_theta = 0.0; // change in angles in radians
 
         double current_time = 0.0;
@@ -58,10 +79,10 @@ class odom : public rclcpp::Node {
             dt = current_time - last_time;
             RCLCPP_INFO(this->get_logger(), "Encoder_data_left: '%d'", encoder_data_left);
             RCLCPP_INFO(this->get_logger(), "Encoder_data_right: '%d'", encoder_data_right);
-            distance_left = (encoder_data_left * (wheel_diameter * 3.14159)/2.0) / ((interpolation_rate * encoder_resolution)/2.0);
-            distance_right = (encoder_data_right * (wheel_diameter * 3.14159)/2.0) / ((interpolation_rate * encoder_resolution)/2.0);
+            distance_left = (encoder_data_left * (wheel_diameter_ * 3.14159)/2.0) / ((interpolation_rate_ * encoder_resolution_)/2.0);
+            distance_right = (encoder_data_right * (wheel_diameter_ * 3.14159)/2.0) / ((interpolation_rate_ * encoder_resolution_)/2.0);
             distance_avg = (distance_left + distance_right) / 2.0;
-            delta_theta = (distance_right - distance_left) / wheel_to_wheel;
+            delta_theta = (distance_right - distance_left) / wheel_to_wheel_;
             RCLCPP_INFO(this->get_logger(), "Distance_left: '%f'", distance_left);
             RCLCPP_INFO(this->get_logger(), "Distance_right: '%f'", distance_right);
             RCLCPP_INFO(this->get_logger(), "Distance_avg: '%f'", distance_avg);

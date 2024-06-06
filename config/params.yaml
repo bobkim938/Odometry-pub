@@ -1,0 +1,6 @@
+odom_node:
+ ros__parameters:
+  wheel_diameter: 0.15 # units in meters
+  wheel_to_wheel: 0.3 # distance between each wheel (m)
+  encoder_resolution: 1024
+  interpolation_rate: 4

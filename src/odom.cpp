@@ -80,8 +80,8 @@ class odom : public rclcpp::Node {
             dt = current_time - last_time;
             RCLCPP_INFO(this->get_logger(), "Encoder_data_left: '%d'", encoder_data_left);
             RCLCPP_INFO(this->get_logger(), "Encoder_data_right: '%d'", encoder_data_right);
-            distance_left = (encoder_data_left * (wheel_diameter_ * 3.14159)/2.0) / ((interpolation_rate_ * encoder_resolution_)/2.0);
-            distance_right = (encoder_data_right * (wheel_diameter_ * 3.14159)/2.0) / ((interpolation_rate_ * encoder_resolution_)/2.0);
+            distance_left = (encoder_data_left * (wheel_diameter_ * 3.14159)/4.0) / ((interpolation_rate_ * encoder_resolution_)/2.0);
+            distance_right = (encoder_data_right * (wheel_diameter_ * 3.14159)/4.0) / ((interpolation_rate_ * encoder_resolution_)/2.0);
             distance_avg = (distance_left + distance_right) / 2.0;
             delta_theta = (distance_right - distance_left) / wheel_to_wheel_; // beta
             RCLCPP_INFO(this->get_logger(), "Distance_left: '%f'", distance_left);

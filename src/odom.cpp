@@ -56,6 +56,7 @@ class odom : public rclcpp::Node {
         double distance_right = 0.0;
         double distance_avg = 0.0;
         double delta_theta = 0.0; // change in angles in radians
+        double alpha = 0.0;
 
         double current_time = 0.0;
         double last_time = 0.0;
@@ -82,7 +83,7 @@ class odom : public rclcpp::Node {
             distance_left = (encoder_data_left * (wheel_diameter_ * 3.14159)/2.0) / ((interpolation_rate_ * encoder_resolution_)/2.0);
             distance_right = (encoder_data_right * (wheel_diameter_ * 3.14159)/2.0) / ((interpolation_rate_ * encoder_resolution_)/2.0);
             distance_avg = (distance_left + distance_right) / 2.0;
-            delta_theta = (distance_right - distance_left) / wheel_to_wheel_;
+            delta_theta = (distance_right - distance_left) / wheel_to_wheel_; // beta
             RCLCPP_INFO(this->get_logger(), "Distance_left: '%f'", distance_left);
             RCLCPP_INFO(this->get_logger(), "Distance_right: '%f'", distance_right);
             RCLCPP_INFO(this->get_logger(), "Distance_avg: '%f'", distance_avg);
@@ -95,8 +96,8 @@ class odom : public rclcpp::Node {
             last_theta = theta;
             theta += delta_theta;
             q.setRPY(0.0, 0.0, theta);
-            x += distance_avg * cos(theta);
-            y += distance_avg * sin(theta);
+            x += distance_avg * cos(last_theta + theta/2.0);
+            y += distance_avg * sin(last_theta + theta/2.0);
             dx = x - prev_x;
             dy = y - prev_y;
             if(theta > M_PI) {
